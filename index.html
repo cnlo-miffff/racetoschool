@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Cards: Countable vs Uncountable</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .card-container {
+            perspective: 1000px;
+        }
+        .bounce-in {
+            animation: bounceIn 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+        .feedback-pop {
+            animation: pop 0.4s ease-out;
+        }
+        @keyframes pop {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .hidden-el { display: none !important; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen items-center justify-center p-4">
+
+    <!-- Game Container -->
+    <div id="game-container" class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 text-center relative overflow-hidden">
+        
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-extrabold text-indigo-600 mb-2">Grammar Cards</h1>
+            <p class="text-gray-500 font-medium">Teacher-Led Classroom Challenge</p>
+            <div class="mt-4 flex justify-center gap-4">
+                <div class="px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-bold">Blue = Countable</div>
+                <div class="px-4 py-1 bg-red-100 text-red-700 rounded-full text-sm font-bold">Red = Uncountable</div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-100 h-3 rounded-full mb-8">
+            <div id="progress-bar" class="bg-indigo-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <div class="py-12">
+                <div class="text-6xl mb-6">📝</div>
+                <h2 class="text-2xl font-bold mb-4">Ready to test your students?</h2>
+                <p class="text-gray-600 mb-8 px-10">Students: Raise your <span class="text-blue-600 font-bold">Blue</span> cards for Countable and <span class="text-red-600 font-bold">Red</span> cards for Uncountable!</p>
+                <button onclick="startGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-2xl shadow-lg transition transform hover:scale-105 active:scale-95">
+                    Start Game
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden-el">
+            <div class="mb-10 card-container">
+                <div id="noun-display" class="text-5xl font-black text-gray-800 p-12 bg-indigo-50 rounded-2xl border-4 border-indigo-100 lowercase">
+                    Time
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <!-- Blue / Countable -->
+                <button onclick="checkAnswer('countable')" class="group relative flex flex-col items-center justify-center p-6 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl shadow-xl transition transform active:scale-95">
+                    <span class="text-4xl mb-2">🟦</span>
+                    <span class="text-xl font-bold">Countable</span>
+                    <div class="absolute -top-2 -right-2 bg-blue-700 text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition">Blue Card</div>
+                </button>
+
+                <!-- Red / Uncountable -->
+                <button onclick="checkAnswer('uncountable')" class="group relative flex flex-col items-center justify-center p-6 bg-red-500 hover:bg-red-600 text-white rounded-2xl shadow-xl transition transform active:scale-95">
+                    <span class="text-4xl mb-2">🟥</span>
+                    <span class="text-xl font-bold">Uncountable</span>
+                    <div class="absolute -top-2 -right-2 bg-red-700 text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition">Red Card</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="result-screen" class="hidden-el">
+            <div class="py-8">
+                <h2 class="text-4xl font-black text-indigo-900 mb-2">Great Job!</h2>
+                <div id="score-text" class="text-2xl font-bold text-gray-600 mb-8">Score: 0 / 5</div>
+                
+                <div id="summary-list" class="text-left bg-gray-50 p-6 rounded-xl mb-8 space-y-2">
+                    <!-- Results will be injected here -->
+                </div>
+
+                <button onclick="resetGame()" class="bg-gray-800 hover:bg-black text-white font-bold py-4 px-8 rounded-2xl transition transform hover:scale-105">
+                    Play Again
+                </button>
+            </div>
+        </div>
+
+        <!-- Feedback Overlay -->
+        <div id="feedback-overlay" class="hidden-el absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-20">
+            <div id="feedback-content" class="text-center p-8 rounded-3xl">
+                <div id="feedback-icon" class="text-8xl mb-4">✅</div>
+                <div id="feedback-text" class="text-3xl font-bold mb-2">Correct!</div>
+                <div id="feedback-desc" class="text-gray-600 italic"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <p class="mt-8 text-gray-400 text-sm">Classroom Grammar Game Tool</p>
+
+    <script>
+        const quizData = [
+            { noun: "Time", type: "uncountable", explanation: "Usually uncountable ('How much time?')." },
+            { noun: "Confidence", type: "uncountable", explanation: "Confidence is an abstract quality and can't be counted." },
+            { noun: "Sleep", type: "uncountable", explanation: "You can't have 'three sleeps' in general usage; it's a mass noun." },
+            { noun: "People", type: "countable", explanation: "Even though it's plural, you can count individuals (one person, two people)." },
+            { noun: "Teenagers", type: "countable", explanation: "A plural countable noun (one teenager, two teenagers)." }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let userChoices = [];
+
+        // Element references
+        let startScreen, quizScreen, resultScreen, feedbackOverlay, nounDisplay, progressBar;
+
+        // Initialize variables when DOM is ready
+        window.onload = function() {
+            startScreen = document.getElementById('start-screen');
+            quizScreen = document.getElementById('quiz-screen');
+            resultScreen = document.getElementById('result-screen');
+            feedbackOverlay = document.getElementById('feedback-overlay');
+            nounDisplay = document.getElementById('noun-display');
+            progressBar = document.getElementById('progress-bar');
+        };
+
+        window.startGame = function() {
+            currentQuestion = 0;
+            score = 0;
+            userChoices = [];
+            if(startScreen) startScreen.classList.add('hidden-el');
+            if(quizScreen) quizScreen.classList.remove('hidden-el');
+            showQuestion();
+        };
+
+        function showQuestion() {
+            const data = quizData[currentQuestion];
+            if (nounDisplay) {
+                nounDisplay.textContent = data.noun;
+                nounDisplay.classList.remove('bounce-in');
+                void nounDisplay.offsetWidth; // Trigger reflow to restart animation
+                nounDisplay.classList.add('bounce-in');
+            }
+            
+            if (progressBar) {
+                const progress = (currentQuestion / quizData.length) * 100;
+                progressBar.style.width = `${progress}%`;
+            }
+        }
+
+        window.checkAnswer = function(choice) {
+            const correctAnswer = quizData[currentQuestion].type;
+            const isCorrect = choice === correctAnswer;
+            
+            if (isCorrect) score++;
+            userChoices.push(isCorrect);
+
+            showFeedback(isCorrect);
+        };
+
+        function showFeedback(isCorrect) {
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackText = document.getElementById('feedback-text');
+            const feedbackDesc = document.getElementById('feedback-desc');
+            const currentData = quizData[currentQuestion];
+
+            if (feedbackIcon) feedbackIcon.textContent = isCorrect ? "✅" : "❌";
+            if (feedbackText) {
+                feedbackText.textContent = isCorrect ? "Correct!" : "Incorrect";
+                feedbackText.style.color = isCorrect ? "#10b981" : "#ef4444";
+            }
+            if (feedbackDesc) feedbackDesc.textContent = currentData.explanation;
+
+            if (feedbackOverlay) {
+                feedbackOverlay.classList.remove('hidden-el');
+                feedbackOverlay.classList.add('feedback-pop');
+            }
+
+            setTimeout(() => {
+                if (feedbackOverlay) {
+                    feedbackOverlay.classList.add('hidden-el');
+                    feedbackOverlay.classList.remove('feedback-pop');
+                }
+                nextQuestion();
+            }, 2000);
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < quizData.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            if (quizScreen) quizScreen.classList.add('hidden-el');
+            if (resultScreen) resultScreen.classList.remove('hidden-el');
+            if (progressBar) progressBar.style.width = `100%`;
+            
+            const scoreDisplay = document.getElementById('score-text');
+            if (scoreDisplay) scoreDisplay.textContent = `Class Score: ${score} / ${quizData.length}`;
+            
+            const summaryList = document.getElementById('summary-list');
+            if (summaryList) {
+                summaryList.innerHTML = quizData.map((item, index) => `
+                    <div class="flex items-center justify-between border-b border-gray-200 py-2">
+                        <span class="font-bold text-gray-700">${item.noun}</span>
+                        <span class="text-sm ${userChoices[index] ? 'text-green-600' : 'text-red-600'} font-semibold">
+                            ${userChoices[index] ? 'Correct' : 'Incorrect'} (${item.type})
+                        </span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        window.resetGame = function() {
+            if (resultScreen) resultScreen.classList.add('hidden-el');
+            if (startScreen) startScreen.classList.remove('hidden-el');
+            if (progressBar) progressBar.style.width = `0%`;
+        };
+    </script>
+</body>
+</html>
