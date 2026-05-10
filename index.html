@@ -3,245 +3,389 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grammar Cards: Countable vs Uncountable</title>
+    <title>Grammar Sprint: School Bell Race</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #1a1a1a;
+            font-family: 'Press Start 2P', cursive;
+            margin: 0;
+            overflow: hidden;
+            color: white;
         }
-        .card-container {
-            perspective: 1000px;
+        canvas {
+            image-rendering: pixelated;
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: 60vh;
         }
-        .bounce-in {
-            animation: bounceIn 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+        .pixel-border {
+            box-shadow: 
+                0 -4px 0 0 #000,
+                0 4px 0 0 #000,
+                -4px 0 0 0 #000,
+                4px 0 0 0 #000;
         }
-        @keyframes bounceIn {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); opacity: 1; }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); }
+        .btn-active:active {
+            transform: translateY(4px);
         }
-        .feedback-pop {
-            animation: pop 0.4s ease-out;
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
         }
-        @keyframes pop {
-            0% { transform: scale(0.8); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
-        .hidden-el { display: none !important; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen items-center justify-center p-4">
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-    <!-- Game Container -->
-    <div id="game-container" class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 text-center relative overflow-hidden">
+    <!-- Game UI -->
+    <div id="game-container" class="w-full max-w-4xl bg-blue-900 pixel-border relative overflow-hidden flex flex-col">
         
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-extrabold text-indigo-600 mb-2">Grammar Cards</h1>
-            <p class="text-gray-500 font-medium">Teacher-Led Classroom Challenge</p>
-            <div class="mt-4 flex justify-center gap-4">
-                <div class="px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-bold">Blue = Countable</div>
-                <div class="px-4 py-1 bg-red-100 text-red-700 rounded-full text-sm font-bold">Red = Uncountable</div>
-            </div>
-        </div>
-
-        <!-- Progress Bar -->
-        <div class="w-full bg-gray-100 h-3 rounded-full mb-8">
-            <div id="progress-bar" class="bg-indigo-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
-        </div>
-
-        <!-- Start Screen -->
-        <div id="start-screen">
-            <div class="py-12">
-                <div class="text-6xl mb-6">📝</div>
-                <h2 class="text-2xl font-bold mb-4">Ready to test your students?</h2>
-                <p class="text-gray-600 mb-8 px-10">Students: Raise your <span class="text-blue-600 font-bold">Blue</span> cards for Countable and <span class="text-red-600 font-bold">Red</span> cards for Uncountable!</p>
-                <button onclick="startGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-2xl shadow-lg transition transform hover:scale-105 active:scale-95">
-                    Start Game
-                </button>
-            </div>
-        </div>
-
-        <!-- Quiz Screen -->
-        <div id="quiz-screen" class="hidden-el">
-            <div class="mb-10 card-container">
-                <div id="noun-display" class="text-5xl font-black text-gray-800 p-12 bg-indigo-50 rounded-2xl border-4 border-indigo-100 lowercase">
-                    Time
+        <!-- Header / Progress -->
+        <div class="p-4 bg-blue-800 border-b-4 border-black flex justify-between items-center text-[10px] md:text-xs">
+            <div class="flex flex-col gap-2 w-1/3">
+                <span id="p1-label">P1 (A/D)</span>
+                <div class="w-full bg-gray-700 h-4 border-2 border-black">
+                    <div id="p1-progress" class="bg-yellow-400 h-full transition-all duration-300" style="width: 0%"></div>
                 </div>
             </div>
-
-            <div class="grid grid-cols-2 gap-6">
-                <!-- Blue / Countable -->
-                <button onclick="checkAnswer('countable')" class="group relative flex flex-col items-center justify-center p-6 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl shadow-xl transition transform active:scale-95">
-                    <span class="text-4xl mb-2">🟦</span>
-                    <span class="text-xl font-bold">Countable</span>
-                    <div class="absolute -top-2 -right-2 bg-blue-700 text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition">Blue Card</div>
-                </button>
-
-                <!-- Red / Uncountable -->
-                <button onclick="checkAnswer('uncountable')" class="group relative flex flex-col items-center justify-center p-6 bg-red-500 hover:bg-red-600 text-white rounded-2xl shadow-xl transition transform active:scale-95">
-                    <span class="text-4xl mb-2">🟥</span>
-                    <span class="text-xl font-bold">Uncountable</span>
-                    <div class="absolute -top-2 -right-2 bg-red-700 text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition">Red Card</div>
-                </button>
+            
+            <div class="text-center">
+                <div id="timer-display" class="text-2xl text-red-400">10</div>
+                <div class="text-[8px]">SECONDS</div>
             </div>
-        </div>
 
-        <!-- Results Screen -->
-        <div id="result-screen" class="hidden-el">
-            <div class="py-8">
-                <h2 class="text-4xl font-black text-indigo-900 mb-2">Great Job!</h2>
-                <div id="score-text" class="text-2xl font-bold text-gray-600 mb-8">Score: 0 / 5</div>
-                
-                <div id="summary-list" class="text-left bg-gray-50 p-6 rounded-xl mb-8 space-y-2">
-                    <!-- Results will be injected here -->
+            <div class="flex flex-col gap-2 w-1/3 items-end">
+                <span id="p2-label">P2 (1/3)</span>
+                <div class="w-full bg-gray-700 h-4 border-2 border-black">
+                    <div id="p2-progress" class="bg-green-400 h-full transition-all duration-300" style="width: 0%"></div>
                 </div>
-
-                <button onclick="resetGame()" class="bg-gray-800 hover:bg-black text-white font-bold py-4 px-8 rounded-2xl transition transform hover:scale-105">
-                    Play Again
-                </button>
             </div>
         </div>
 
-        <!-- Feedback Overlay -->
-        <div id="feedback-overlay" class="hidden-el absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-20">
-            <div id="feedback-content" class="text-center p-8 rounded-3xl">
-                <div id="feedback-icon" class="text-8xl mb-4">✅</div>
-                <div id="feedback-text" class="text-3xl font-bold mb-2">Correct!</div>
-                <div id="feedback-desc" class="text-gray-600 italic"></div>
+        <!-- Main Stage -->
+        <div class="relative bg-sky-300">
+            <canvas id="gameCanvas"></canvas>
+            
+            <!-- Word Display Overlay -->
+            <div id="word-overlay" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div id="current-word-box" class="bg-white text-black px-6 py-4 pixel-border text-xl md:text-3xl mb-4 hidden">
+                    <span id="current-word">TIME</span>
+                </div>
+                <div id="round-feedback" class="text-lg text-yellow-300 drop-shadow-md bg-black/40 px-4 py-1 rounded hidden"></div>
+            </div>
+
+            <!-- Start/End Overlay -->
+            <div id="menu-overlay" class="absolute inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center z-20 p-8 text-center">
+                <h1 class="text-2xl md:text-4xl mb-6 text-yellow-400">SCHOOL BELL RACE</h1>
+                <p id="menu-text" class="text-[10px] md:text-sm mb-8 leading-relaxed">
+                    FASTER CORRECT ANSWER WINS THE ROUND!<br><br>
+                    PLAYER 1: [A] Countable | [D] Uncountable<br>
+                    PLAYER 2: [1] Countable | [3] Uncountable<br><br>
+                    Winner reaches the school door! Go!
+                </p>
+                <button id="start-btn" class="bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 pixel-border btn-active">START RACE!</button>
             </div>
         </div>
 
+        <!-- Footer / Legend -->
+        <div class="p-4 bg-gray-900 border-t-4 border-black flex justify-between text-[8px] md:text-[10px]">
+            <div class="text-blue-400">LEFT = COUNTABLE</div>
+            <div class="text-yellow-500">SPEED IS EVERYTHING!</div>
+            <div class="text-pink-400">RIGHT = UNCOUNTABLE</div>
+        </div>
     </div>
 
-    <p class="mt-8 text-gray-400 text-sm">Classroom Grammar Game Tool</p>
-
     <script>
-        const quizData = [
-            { noun: "Time", type: "uncountable", explanation: "Usually uncountable ('How much time?')." },
-            { noun: "Confidence", type: "uncountable", explanation: "Confidence is an abstract quality and can't be counted." },
-            { noun: "Sleep", type: "uncountable", explanation: "You can't have 'three sleeps' in general usage; it's a mass noun." },
-            { noun: "People", type: "countable", explanation: "Even though it's plural, you can count individuals (one person, two people)." },
-            { noun: "Teenagers", type: "countable", explanation: "A plural countable noun (one teenager, two teenagers)." }
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const wordBox = document.getElementById('current-word-box');
+        const wordText = document.getElementById('current-word');
+        const timerDisplay = document.getElementById('timer-display');
+        const p1Progress = document.getElementById('p1-progress');
+        const p2Progress = document.getElementById('p2-progress');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const startBtn = document.getElementById('start-btn');
+        const feedback = document.getElementById('round-feedback');
+
+        // Game Configuration
+        const nouns = [
+            { word: "TIME", type: "uncountable" },
+            { word: "CONFIDENCE", type: "uncountable" },
+            { word: "SLEEP", type: "uncountable" },
+            { word: "PEOPLE", type: "countable" },
+            { word: "TEENAGERS", type: "countable" }
         ];
 
-        let currentQuestion = 0;
-        let score = 0;
-        let userChoices = [];
+        let gameState = 'MENU';
+        let currentRound = 0;
+        let timer = 10;
+        let timerInterval;
+        let p1Score = 0;
+        let p2Score = 0;
+        let p1Status = 'idle'; 
+        let p2Status = 'idle';
+        let frameCount = 0;
 
-        // Element references
-        let startScreen, quizScreen, resultScreen, feedbackOverlay, nounDisplay, progressBar;
+        let p1VisualX = 50;
+        let p2VisualX = 50;
 
-        // Initialize variables when DOM is ready
-        window.onload = function() {
-            startScreen = document.getElementById('start-screen');
-            quizScreen = document.getElementById('quiz-screen');
-            resultScreen = document.getElementById('result-screen');
-            feedbackOverlay = document.getElementById('feedback-overlay');
-            nounDisplay = document.getElementById('noun-display');
-            progressBar = document.getElementById('progress-bar');
-        };
+        let p1Locked = false;
+        let p2Locked = false;
+        let roundActive = false;
 
-        window.startGame = function() {
-            currentQuestion = 0;
-            score = 0;
-            userChoices = [];
-            if(startScreen) startScreen.classList.add('hidden-el');
-            if(quizScreen) quizScreen.classList.remove('hidden-el');
-            showQuestion();
-        };
+        function resize() {
+            canvas.width = 800;
+            canvas.height = 300;
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
-        function showQuestion() {
-            const data = quizData[currentQuestion];
-            if (nounDisplay) {
-                nounDisplay.textContent = data.noun;
-                nounDisplay.classList.remove('bounce-in');
-                void nounDisplay.offsetWidth; // Trigger reflow to restart animation
-                nounDisplay.classList.add('bounce-in');
-            }
+        function drawCharacter(x, y, color, state, frame) {
+            ctx.save();
+            ctx.translate(x, y);
             
-            if (progressBar) {
-                const progress = (currentQuestion / quizData.length) * 100;
-                progressBar.style.width = `${progress}%`;
+            const bounce = state === 'running' ? Math.sin(frame * 0.2) * 5 : (state === 'idle' ? Math.sin(frame * 0.1) * 2 : 0);
+            const rotation = state === 'tripped' ? -Math.PI / 2 : 0;
+            const offsetY = state === 'tripped' ? 20 : bounce;
+
+            ctx.translate(0, offsetY);
+            ctx.rotate(rotation);
+
+            // Legs
+            ctx.fillStyle = '#333';
+            if (state === 'running') {
+                const legMove = Math.sin(frame * 0.2) * 8;
+                ctx.fillRect(-8, 20, 6, 10 + legMove); 
+                ctx.fillRect(2, 20, 6, 10 - legMove);  
+            } else {
+                ctx.fillRect(-8, 20, 6, 10);
+                ctx.fillRect(2, 20, 6, 10);
+            }
+
+            // Body
+            ctx.fillStyle = color;
+            ctx.fillRect(-12, 0, 24, 25);
+            
+            // Head
+            ctx.fillStyle = '#ffdbac';
+            ctx.fillRect(-10, -18, 20, 20);
+
+            // Hair
+            ctx.fillStyle = '#4b2c20';
+            ctx.fillRect(-12, -22, 24, 8);
+
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.fillRect(-6, -12, 3, 3);
+            ctx.fillRect(3, -12, 3, 3);
+
+            ctx.restore();
+        }
+
+        function drawBackground() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Ground
+            ctx.fillStyle = '#91d051';
+            ctx.fillRect(0, 240, canvas.width, 60);
+            
+            // Road
+            ctx.fillStyle = '#bcbcbc';
+            ctx.fillRect(0, 250, canvas.width, 30);
+
+            // School Building
+            ctx.fillStyle = '#a52a2a';
+            ctx.fillRect(700, 140, 100, 110);
+            ctx.fillStyle = '#800000';
+            ctx.fillRect(730, 190, 40, 60);
+            ctx.fillStyle = '#333';
+            ctx.fillRect(690, 135, 120, 10);
+        }
+
+        function gameLoop() {
+            frameCount++;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+
+            let targetX1, targetX2;
+
+            if (gameState === 'FINISHED') {
+                // Winner (or tie leaders) runs to the door (750)
+                // Loser stays at their score position
+                const maxScore = Math.max(p1Score, p2Score);
+                
+                targetX1 = (p1Score === maxScore && p1Score > 0) ? 750 : (50 + (p1Score / nouns.length) * 600);
+                targetX2 = (p2Score === maxScore && p2Score > 0) ? 750 : (50 + (p2Score / nouns.length) * 600);
+
+                // Set status to running if not at door yet
+                if (Math.abs(p1VisualX - targetX1) > 2) p1Status = 'running'; else p1Status = 'idle';
+                if (Math.abs(p2VisualX - targetX2) > 2) p2Status = 'running'; else p2Status = 'idle';
+            } else {
+                targetX1 = 50 + (p1Score / nouns.length) * 600;
+                targetX2 = 50 + (p2Score / nouns.length) * 600;
+            }
+
+            // Smoothly move visuals towards targets
+            p1VisualX += (targetX1 - p1VisualX) * 0.05;
+            p2VisualX += (targetX2 - p2VisualX) * 0.05;
+
+            drawCharacter(p1VisualX, 240, '#facc15', p1Status, frameCount);
+            drawCharacter(p2VisualX, 260, '#4ade80', p2Status, frameCount);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startRound() {
+            if (currentRound >= nouns.length) {
+                endGame();
+                return;
+            }
+
+            p1Locked = false;
+            p2Locked = false;
+            p1Status = 'idle';
+            p2Status = 'idle';
+            roundActive = true;
+            
+            wordText.textContent = nouns[currentRound].word;
+            wordBox.classList.remove('hidden', 'shake');
+            feedback.classList.add('hidden');
+            
+            timer = 10;
+            timerDisplay.textContent = timer;
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timer--;
+                timerDisplay.textContent = timer;
+                if (timer <= 0) {
+                    resolveRound(null, 'timeout');
+                }
+            }, 1000);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (!roundActive || gameState !== 'PLAYING') return;
+
+            const correctType = nouns[currentRound].type;
+
+            // Player 1
+            if (!p1Locked) {
+                if (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'd') {
+                    const choice = (e.key.toLowerCase() === 'a') ? 'countable' : 'uncountable';
+                    if (choice === correctType) {
+                        resolveRound(1, 'win');
+                    } else {
+                        p1Status = 'tripped';
+                        p1Locked = true;
+                        wordBox.classList.add('shake');
+                        setTimeout(() => wordBox.classList.remove('shake'), 500);
+                        checkAllFailed();
+                    }
+                }
+            }
+
+            // Player 2
+            if (!p2Locked) {
+                if (e.key === '1' || e.key === '3') {
+                    const choice = (e.key === '1') ? 'countable' : 'uncountable';
+                    if (choice === correctType) {
+                        resolveRound(2, 'win');
+                    } else {
+                        p2Status = 'tripped';
+                        p2Locked = true;
+                        wordBox.classList.add('shake');
+                        setTimeout(() => wordBox.classList.remove('shake'), 500);
+                        checkAllFailed();
+                    }
+                }
+            }
+        });
+
+        function checkAllFailed() {
+            if (p1Locked && p2Locked) {
+                resolveRound(null, 'both_fail');
             }
         }
 
-        window.checkAnswer = function(choice) {
-            const correctAnswer = quizData[currentQuestion].type;
-            const isCorrect = choice === correctAnswer;
+        function resolveRound(winner, reason) {
+            roundActive = false;
+            clearInterval(timerInterval);
+
+            if (winner === 1) {
+                p1Score++;
+                p1Status = 'running';
+                p1Progress.style.width = (p1Score / nouns.length * 100) + "%";
+                showFeedback("P1 WAS FASTER!");
+            } else if (winner === 2) {
+                p2Score++;
+                p2Status = 'running';
+                p2Progress.style.width = (p2Score / nouns.length * 100) + "%";
+                showFeedback("P2 WAS FASTER!");
+            } else if (reason === 'timeout') {
+                showFeedback("TOO SLOW!");
+            } else {
+                showFeedback("BOTH TRIPPED!");
+            }
+
+            wordBox.classList.add('hidden');
             
-            if (isCorrect) score++;
-            userChoices.push(isCorrect);
-
-            showFeedback(isCorrect);
-        };
-
-        function showFeedback(isCorrect) {
-            const feedbackIcon = document.getElementById('feedback-icon');
-            const feedbackText = document.getElementById('feedback-text');
-            const feedbackDesc = document.getElementById('feedback-desc');
-            const currentData = quizData[currentQuestion];
-
-            if (feedbackIcon) feedbackIcon.textContent = isCorrect ? "✅" : "❌";
-            if (feedbackText) {
-                feedbackText.textContent = isCorrect ? "Correct!" : "Incorrect";
-                feedbackText.style.color = isCorrect ? "#10b981" : "#ef4444";
-            }
-            if (feedbackDesc) feedbackDesc.textContent = currentData.explanation;
-
-            if (feedbackOverlay) {
-                feedbackOverlay.classList.remove('hidden-el');
-                feedbackOverlay.classList.add('feedback-pop');
-            }
-
             setTimeout(() => {
-                if (feedbackOverlay) {
-                    feedbackOverlay.classList.add('hidden-el');
-                    feedbackOverlay.classList.remove('feedback-pop');
-                }
-                nextQuestion();
+                currentRound++;
+                startRound();
+            }, 1000);
+        }
+
+        function showFeedback(msg) {
+            feedback.textContent = msg;
+            feedback.classList.remove('hidden');
+        }
+
+        function endGame() {
+            gameState = 'FINISHED';
+            
+            // Wait for characters to finish their dash before showing the menu
+            setTimeout(() => {
+                menuOverlay.classList.remove('hidden');
+                let winnerText = "IT'S A TIE!";
+                if (p1Score > p2Score) winnerText = "PLAYER 1 REACHED SCHOOL!";
+                if (p2Score > p1Score) winnerText = "PLAYER 2 REACHED SCHOOL!";
+                
+                menuOverlay.innerHTML = `
+                    <h1 class="text-3xl mb-4 text-yellow-400">RACE COMPLETE!</h1>
+                    <p class="text-lg mb-6">${winnerText}</p>
+                    <div class="flex justify-center gap-10 mb-8">
+                        <div>P1: ${p1Score}</div>
+                        <div>P2: ${p2Score}</div>
+                    </div>
+                    <button onclick="location.reload()" class="bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 pixel-border btn-active">REMATCH</button>
+                `;
             }, 2000);
         }
 
-        function nextQuestion() {
-            currentQuestion++;
-            if (currentQuestion < quizData.length) {
-                showQuestion();
-            } else {
-                showResults();
-            }
-        }
+        startBtn.addEventListener('click', () => {
+            menuOverlay.classList.add('hidden');
+            gameState = 'PLAYING';
+            currentRound = 0;
+            p1Score = 0;
+            p2Score = 0;
+            p1VisualX = 50;
+            p2VisualX = 50;
+            p1Progress.style.width = "0%";
+            p2Progress.style.width = "0%";
+            startRound();
+        });
 
-        function showResults() {
-            if (quizScreen) quizScreen.classList.add('hidden-el');
-            if (resultScreen) resultScreen.classList.remove('hidden-el');
-            if (progressBar) progressBar.style.width = `100%`;
-            
-            const scoreDisplay = document.getElementById('score-text');
-            if (scoreDisplay) scoreDisplay.textContent = `Class Score: ${score} / ${quizData.length}`;
-            
-            const summaryList = document.getElementById('summary-list');
-            if (summaryList) {
-                summaryList.innerHTML = quizData.map((item, index) => `
-                    <div class="flex items-center justify-between border-b border-gray-200 py-2">
-                        <span class="font-bold text-gray-700">${item.noun}</span>
-                        <span class="text-sm ${userChoices[index] ? 'text-green-600' : 'text-red-600'} font-semibold">
-                            ${userChoices[index] ? 'Correct' : 'Incorrect'} (${item.type})
-                        </span>
-                    </div>
-                `).join('');
-            }
-        }
-
-        window.resetGame = function() {
-            if (resultScreen) resultScreen.classList.add('hidden-el');
-            if (startScreen) startScreen.classList.remove('hidden-el');
-            if (progressBar) progressBar.style.width = `0%`;
-        };
+        // Initialize Loop
+        requestAnimationFrame(gameLoop);
     </script>
 </body>
 </html>
